@@ -442,4 +442,5 @@ The **NPCI Developer Portal** has a UPI sandbox available for registered fintech
 
 ---
 
-*Built with ❤️ — OFF MESH.*
+*
+* OFF MESH.*
