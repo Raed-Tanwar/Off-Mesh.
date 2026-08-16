@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://raed-tanwar.github.io/off-mesh/sitemap.xml

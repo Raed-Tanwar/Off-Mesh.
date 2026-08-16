@@ -12,5 +12,18 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    sourcemap: false, // hide source code in production
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          motion: ['framer-motion'],
+          charts: ['recharts'],
+          icons: ['lucide-react'],
+        }
+      }
+    }
   }
 })
