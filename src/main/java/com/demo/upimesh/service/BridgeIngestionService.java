@@ -70,6 +70,9 @@ public class BridgeIngestionService {
 
             // ---- Settle ----
             Transaction tx = settlement.settle(instruction, packetHash, bridgeNodeId, hopCount);
+            if (tx.getStatus() == Transaction.Status.REJECTED) {
+                return IngestResult.rejected(packetHash, "insufficient_funds", tx);
+            }
             return IngestResult.settled(packetHash, tx);
 
         } catch (Exception e) {
@@ -81,6 +84,9 @@ public class BridgeIngestionService {
     public record IngestResult(String outcome, String packetHash, String reason, Long transactionId) {
         public static IngestResult settled(String hash, Transaction tx) {
             return new IngestResult("SETTLED", hash, null, tx.getId());
+        }
+        public static IngestResult rejected(String hash, String reason, Transaction tx) {
+            return new IngestResult("REJECTED", hash, reason, tx.getId());
         }
         public static IngestResult duplicate(String hash) {
             return new IngestResult("DUPLICATE_DROPPED", hash, null, null);

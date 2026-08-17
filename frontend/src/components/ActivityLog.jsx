@@ -4,6 +4,7 @@ import { Terminal, Trash2 } from 'lucide-react';
 export default function ActivityLog({ logs = [], onClearLog }) {
   const getLogColor = (msg) => {
     if (msg.includes('SETTLED')) return '#4ade80';
+    if (msg.includes('REJECTED')) return '#f97316';
     if (msg.includes('DUPLICATE')) return '#facc15';
     if (msg.includes('INVALID') || msg.includes('Error')) return '#f87171';
     if (msg.includes('Packet') || msg.includes('Inject')) return '#38bdf8';

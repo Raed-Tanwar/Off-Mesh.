@@ -1,24 +1,26 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, RefreshCw, UploadCloud, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, RefreshCw, UploadCloud, CheckCircle2, XCircle } from 'lucide-react';
 
 export default function PaymentProgress({ activePayment }) {
   if (!activePayment) return null;
 
   const { stage, packetId, senderVpa, receiverVpa, amount } = activePayment;
 
-  // Stages: 1 = Injected (25%), 2 = Gossiping (60%), 3 = Uploading (85%), 4 = Settled (100%)
+  // Stages: 1 = Injected (25%), 2 = Gossiping (60%), 3 = Uploading (85%), 4 = Settled/Rejected (100%)
   const getProgressPercent = () => {
     switch (stage) {
       case 'injected': return 25;
       case 'gossiping': return 65;
       case 'uploading': return 88;
       case 'settled': return 100;
+      case 'rejected': return 100;
       default: return 0;
     }
   };
 
   const percent = getProgressPercent();
+  const isRejected = stage === 'rejected';
 
   return (
     <motion.div
@@ -81,7 +83,7 @@ export default function PaymentProgress({ activePayment }) {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{
             height: '100%',
-            background: stage === 'settled' ? 'var(--accent-green)' : 'var(--accent-red)',
+            background: isRejected ? '#f97316' : stage === 'settled' ? 'var(--accent-green)' : 'var(--accent-red)',
             borderRadius: 'var(--radius-pill)'
           }}
         />
@@ -110,9 +112,24 @@ export default function PaymentProgress({ activePayment }) {
           <span>3. 4G Bridge Upload</span>
         </div>
 
-        <div style={{ color: percent >= 100 ? 'var(--accent-green)' : 'var(--text-muted)', fontWeight: percent >= 100 ? 700 : 400, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <CheckCircle2 size={13} color={percent >= 100 ? 'var(--accent-green)' : 'var(--text-muted)'} />
-          <span>4. Settled Ledger</span>
+        <div style={{
+          color: isRejected ? '#f97316' : percent >= 100 ? 'var(--accent-green)' : 'var(--text-muted)',
+          fontWeight: percent >= 100 ? 700 : 400,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          {isRejected ? (
+            <>
+              <XCircle size={13} color="#f97316" />
+              <span>4. Rejected (Insufficient Funds)</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={13} color={percent >= 100 ? 'var(--accent-green)' : 'var(--text-muted)'} />
+              <span>4. Settled Ledger</span>
+            </>
+          )}
         </div>
       </div>
     </motion.div>

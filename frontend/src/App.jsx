@@ -159,9 +159,16 @@ export default function App() {
       const res = await flushBridges();
       addLog(`📡 ${res.uploadsAttempted} bridge upload(s):`);
 
+      let hasRejected = false;
+      let hasSettled = false;
+
       (res.results || []).forEach((r) => {
         if (r.outcome === 'SETTLED') {
+          hasSettled = true;
           addLog(`   ✅ Bridge ${r.bridgeNode} packet ${r.packetId} → SETTLED (Tx #${r.transactionId})`);
+        } else if (r.outcome === 'REJECTED') {
+          hasRejected = true;
+          addLog(`   ❌ Bridge ${r.bridgeNode} packet ${r.packetId} → REJECTED (${r.reason})`);
         } else if (r.outcome === 'DUPLICATE_DROPPED') {
           addLog(`   ⚠️ Bridge ${r.bridgeNode} packet ${r.packetId} → DUPLICATE_DROPPED (Idempotency protected)`);
         } else {
@@ -171,9 +178,21 @@ export default function App() {
 
       await refreshAllData();
 
-      if (activePayment) {
-        setActivePayment((prev) => ({ ...prev, stage: 'settled' }));
+      if (hasRejected) {
+        addToast('Payment rejected: insufficient funds');
       }
+
+      setActivePayment((prev) => {
+        if (!prev) return null;
+        if (hasRejected) {
+          return { ...prev, stage: 'rejected' };
+        } else if (hasSettled) {
+          return { ...prev, stage: 'settled' };
+        }
+        return prev;
+      });
+
+      return { hasRejected, hasSettled, res };
     } catch (err) {
       addToast(`Bridge upload failed: ${err.message}`);
       addLog(`🔥 Error uploading: ${err.message}`);

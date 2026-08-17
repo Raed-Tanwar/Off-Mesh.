@@ -108,4 +108,26 @@ class IdempotencyConcurrencyTest {
         assertEquals(0, original.getAmount().compareTo(decrypted.getAmount()));
         assertEquals(original.getNonce(), decrypted.getNonce());
     }
+
+    @Test
+    void insufficientBalanceReturnsRejectedOutcome() throws Exception {
+        BigDecimal aliceBefore = accounts.findById("alice@demo").orElseThrow().getBalance();
+        BigDecimal bobBefore = accounts.findById("bob@demo").orElseThrow().getBalance();
+
+        // Alice attempts to send more than her balance
+        BigDecimal excessiveAmount = aliceBefore.add(new BigDecimal("1000.00"));
+        MeshPacket packet = demoService.createPacket(
+                "alice@demo", "bob@demo", excessiveAmount, "1234", 5);
+
+        BridgeIngestionService.IngestResult r = bridge.ingest(packet, "bridge-1", 1);
+
+        assertEquals("REJECTED", r.outcome());
+        assertEquals("insufficient_funds", r.reason());
+        assertNotNull(r.transactionId());
+
+        BigDecimal aliceAfter = accounts.findById("alice@demo").orElseThrow().getBalance();
+        BigDecimal bobAfter = accounts.findById("bob@demo").orElseThrow().getBalance();
+        assertEquals(aliceBefore, aliceAfter);
+        assertEquals(bobBefore, bobAfter);
+    }
 }

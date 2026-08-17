@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, RefreshCw, UploadCloud, Trash2, Settings, AlertTriangle, ArrowRight, CheckCircle2, RotateCcw } from 'lucide-react';
+import { Send, RefreshCw, UploadCloud, Trash2, Settings, AlertTriangle, ArrowRight, CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
 
 export default function DemoControls({
   onSend,
@@ -18,30 +18,34 @@ export default function DemoControls({
   const [pin, setPin] = useState('1234');
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [isSettled, setIsSettled] = useState(false);
+  const [flushOutcome, setFlushOutcome] = useState(null); // null | 'settled' | 'rejected'
 
   const handleSendSubmit = async (e) => {
     e.preventDefault();
     if (!amount || amount <= 0) return;
     await onSend({ senderVpa, receiverVpa, amount: parseFloat(amount), pin, ttl: 5, startDevice: 'phone-alice' });
-    setIsSettled(false);
+    setFlushOutcome(null);
     setCurrentStep(2); // Slide to Step 2: Gossip
   };
 
   const handleFlushSubmit = async () => {
-    await onFlush();
-    setIsSettled(true);
+    const result = await onFlush();
+    if (result && result.hasRejected) {
+      setFlushOutcome('rejected');
+    } else {
+      setFlushOutcome('settled');
+    }
   };
 
   const handleNewPayment = () => {
-    setIsSettled(false);
+    setFlushOutcome(null);
     setCurrentStep(1); // Slide back to Step 1: Compose
   };
 
   const handleResetAll = async () => {
     setShowConfirmReset(false);
     await onReset();
-    setIsSettled(false);
+    setFlushOutcome(null);
     setCurrentStep(1);
   };
 
@@ -275,8 +279,30 @@ export default function DemoControls({
                 <div className="step-number">03</div>
               </div>
 
-              {isSettled ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', textContent: 'center', padding: '12px 0' }}>
+              {flushOutcome === 'rejected' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px 0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#f97316' }}>
+                    <XCircle size={28} />
+                    <div>
+                      <strong style={{ fontSize: '18px', fontFamily: 'var(--font-display)' }}>Payment Rejected</strong>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        Payment rejected: insufficient funds. Account balances remain unchanged.
+                      </div>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    className="btn-primary btn-red"
+                    onClick={handleNewPayment}
+                    style={{ marginTop: '12px' }}
+                  >
+                    <RotateCcw size={15} />
+                    <span>Start New Payment (Slide to Step 1)</span>
+                  </motion.button>
+                </div>
+              ) : flushOutcome === 'settled' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '12px 0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--accent-green)' }}>
                     <CheckCircle2 size={28} />
                     <div>
