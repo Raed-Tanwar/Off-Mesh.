@@ -418,7 +418,7 @@ A real offline payment product must also address regulations, KYC/AML obligation
 ## Suggested next steps
 
 1. Persist packets and settlement state in a durable database.
-2. Make packet deduplication and balance updates a single atomic transaction.
+2. Make packet deduplication and balance updates a single atomic transaction.  
 3. Add database constraints and optimistic locking to account updates.
 4. Add signed, canonical payment intents and device-bound keys.
 5. Persist and rotate server keys through a proper key-management service.
